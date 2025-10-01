@@ -2,13 +2,7 @@
 import { GoogleGenAI, GenerateContentResponse, Type } from "@google/genai";
 import { Student, InvoiceStatus, CashFlowForecastData } from '../types';
 
-const API_KEY = 'AIzaSyCh-hVWnTOcr5eoIUQKulW91g4WeWRM-VY';
-
-if (!API_KEY) {
-  console.warn("API_KEY environment variable not set. Gemini API features will be disabled.");
-}
-
-const ai = new GoogleGenAI({ apiKey: API_KEY! });
+const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 const getPaymentHistoryNotes = (student: Student): string => {
     if (student.paymentHistory.length === 0) {
@@ -49,11 +43,7 @@ export const generateReminderMessage = async (student: Student): Promise<string>
         .sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime())[0];
     
     const dueDate = mostUrgentInvoice.dueDate;
-
-    if (!API_KEY) {
-        return Promise.resolve(`Estimado/a ${student.name}, este es un recordatorio de que su pago de $${dueAmount.toFixed(2)} MXN con fecha de vencimiento ${dueDate} está pendiente. (Mensaje de demostración: API Key no configurada)`);
-    }
-
+    
     const paymentNotes = getPaymentHistoryNotes(student);
     
     const prompt = `
@@ -85,10 +75,6 @@ export const generateReminderMessage = async (student: Student): Promise<string>
 };
 
 export const generateDashboardSummary = async (data: { totalCollected: number, totalDue: number, overdueCount: number, highRiskCount: number }): Promise<string> => {
-    if (!API_KEY) {
-        return Promise.resolve(`Resumen de Cobranza: ${data.overdueCount} alumnos con pagos vencidos. ${data.highRiskCount} alumnos en alto riesgo. Tasa de cobranza: ${((data.totalCollected / (data.totalDue || 1)) * 100).toFixed(1)}%. (Resumen de demostración: API Key no configurada)`);
-    }
-
     const prompt = `
         Eres un IA de análisis financiero para el director de finanzas de una escuela. Analiza los siguientes datos de cobranza del mes y proporciona un resumen ejecutivo conciso en español.
 
@@ -118,11 +104,6 @@ export const generateDashboardSummary = async (data: { totalCollected: number, t
 
 
 export const generateCashFlowForecast = async (students: Student[]): Promise<CashFlowForecastData | null> => {
-    if (!API_KEY) {
-        console.warn("Cash flow forecast disabled: API Key not configured.");
-        return null;
-    }
-
     const studentDataForPrompt = students.map(s => ({
         id: s.id,
         riskLevel: s.riskLevel,

@@ -6,11 +6,12 @@ import Dashboard from './components/dashboard/Dashboard';
 import StudentList from './components/students/StudentList';
 import Reports from './components/reports/Reports';
 import Configuration from './components/configuration/Configuration';
+import Automations from './components/automations/Automations';
 import ToastContainer from './components/common/Toast';
 import { UserRole, Student, ToastMessage, Account } from './types';
 import { MOCK_STUDENTS, MOCK_CHART_OF_ACCOUNTS } from './constants';
 
-export type View = 'dashboard' | 'students' | 'reports' | 'configuration';
+export type View = 'dashboard' | 'students' | 'reports' | 'configuration' | 'automations';
 
 const App: React.FC = () => {
   const [isDarkMode, setIsDarkMode] = useState(false);
@@ -53,6 +54,8 @@ const App: React.FC = () => {
         return <Reports students={students} chartOfAccounts={chartOfAccounts} />;
       case 'configuration':
         return <Configuration chartOfAccounts={chartOfAccounts} />;
+      case 'automations':
+        return <Automations students={students} addToast={addToast} />;
       default:
         return <Dashboard students={students} setCurrentView={setCurrentView} />;
     }

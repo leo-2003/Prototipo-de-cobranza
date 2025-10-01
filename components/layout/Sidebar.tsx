@@ -62,6 +62,12 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, setCurrentView }) => {
                     isActive={currentView === 'configuration'}
                     onClick={() => setCurrentView('configuration')}
                 />
+                <NavItem
+                    label="Automatizaciones"
+                    icon={<WandSparklesIcon />}
+                    isActive={currentView === 'automations'}
+                    onClick={() => setCurrentView('automations')}
+                />
             </nav>
         </div>
         <div className="mt-auto">
@@ -86,5 +92,9 @@ const ChartBarIcon = () => (
 const BookOpenIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
 );
+const WandSparklesIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m5 3 2.5 5L10 3l2.5 5L15 3l2.5 5L20 3M5 21l2.5-5L10 21l2.5-5L15 21l2.5-5L20 21m-10-6-2.5-5L5 15l2.5-5L10 15l2.5-5L15 15l2.5-5L20 15"/></svg>
+);
+
 
 export default Sidebar;

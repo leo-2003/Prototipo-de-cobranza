@@ -85,3 +85,12 @@ export interface CashFlowForecastData {
     }>;
     summary: string;
 }
+
+export interface ReminderResult {
+  studentId: string;
+  studentName: string;
+  studentAvatar: string;
+  message: string;
+  status: 'success' | 'error';
+  error?: string;
+}
