@@ -1,0 +1,5 @@
+{
+  "name": "Clarity Edu - Sistema de Cobranza Inteligente",
+  "description": "Un sistema de gestión de cobranza inteligente para una escuela de enfermería, que utiliza IA para optimizar la recaudación, reducir la morosidad y automatizar tareas administrativas. Incluye un dashboard en tiempo real, registro rápido de pagos y análisis predictivos.",
+  "requestFramePermissions": []
+}
