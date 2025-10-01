@@ -2,23 +2,22 @@
 import { GoogleGenAI, GenerateContentResponse, Type } from "@google/genai";
 import { Student, InvoiceStatus, CashFlowForecastData } from '../types';
 
+// Fix: Use process.env.API_KEY as per the guidelines to fix the TypeScript error and align with requirements.
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 /**
- * Handles errors from the Gemini API, throwing a more specific, user-friendly error.
+ * Handles errors from the Gemini API, returning a more specific, user-friendly error.
  * @param error The original error caught.
  * @param context A string describing the operation that failed (e.g., 'generating reminder message').
- * @throws An error with a user-friendly message.
+ * @returns An Error object with a user-friendly message.
  */
-const handleGeminiError = (error: unknown, context: string): never => {
+const handleGeminiError = (error: unknown, context: string): Error => {
     console.error(`Error ${context}:`, error);
-    if (!process.env.API_KEY) {
-        throw new Error("La clave API de Gemini no está configurada. Por favor, configure la variable de entorno API_KEY.");
-    }
+    // Fix: Updated error message to refer to API_KEY as per guidelines.
     if (error instanceof Error && (error.message.toLowerCase().includes('api key') || error.message.toLowerCase().includes('invalid'))) {
-        throw new Error("La clave API de Gemini no es válida. Por favor, revise la variable de entorno API_KEY.");
+        return new Error("La clave API de Gemini no está configurada o no es válida. Por favor, configure la variable de entorno API_KEY.");
     }
-    throw new Error(`No se pudo completar la acción de "${context}". Inténtelo de nuevo.`);
+    return new Error(`No se pudo completar la acción de "${context}". Inténtelo de nuevo.`);
 };
 
 
@@ -93,7 +92,7 @@ export const generateReminderMessage = async (student: Student): Promise<string>
         return text;
 
     } catch (error) {
-        handleGeminiError(error, 'generar mensaje de recordatorio');
+        throw handleGeminiError(error, 'generar mensaje de recordatorio');
     }
 };
 
@@ -126,7 +125,7 @@ export const generateDashboardSummary = async (data: { totalCollected: number, t
         return text;
 
     } catch (error) {
-        handleGeminiError(error, 'generar resumen ejecutivo');
+        throw handleGeminiError(error, 'generar resumen ejecutivo');
     }
 };
 
@@ -196,6 +195,6 @@ export const generateCashFlowForecast = async (students: Student[]): Promise<Cas
         return JSON.parse(jsonText) as CashFlowForecastData;
 
     } catch (error) {
-        handleGeminiError(error, 'generar pronóstico de flujo de efectivo');
+        throw handleGeminiError(error, 'generar pronóstico de flujo de efectivo');
     }
 };
