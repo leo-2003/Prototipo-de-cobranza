@@ -1,3 +1,4 @@
+
 export enum UserRole {
   Administrator = 'Administrador',
   Cashier = 'Cajero/Recepcionista',
@@ -18,18 +19,31 @@ export enum InvoiceStatus {
   Cancelled = 'Cancelada',
 }
 
+export interface Account {
+  id: string;
+  name: string;
+  type: 'Ingreso' | 'Gasto' | 'Liability';
+}
+
 export interface Payment {
   id: string;
   amount: number;
   date: string;
   concept: string;
-  invoiceId?: string; // Asocia un pago a una factura específica
+  invoiceId?: string;
 }
 
 export interface InvoiceItem {
   id: string;
   description: string;
   amount: number;
+  accountId: string; 
+}
+
+export interface DeferredRevenueSchedule {
+  startDate: string;
+  endDate: string;
+  recognitionMonths: number;
 }
 
 export interface Invoice {
@@ -42,6 +56,7 @@ export interface Invoice {
   totalAmount: number;
   paidAmount: number;
   balance: number;
+  deferredRevenueSchedule?: DeferredRevenueSchedule;
 }
 
 export interface Student {
@@ -49,10 +64,7 @@ export interface Student {
   name: string;
   avatar: string;
   email: string;
-  // Deprecated fields, logic now derived from invoices
-  // status: PaymentStatus;
-  // dueDate: string;
-  // dueAmount: number;
+  enrollmentDate: string;
   riskLevel: 'Bajo' | 'Medio' | 'Alto';
   paymentHistory: Payment[];
   lastCommunication: string;
@@ -63,4 +75,13 @@ export interface ToastMessage {
   id: number;
   message: string;
   type: 'success' | 'error' | 'info';
+}
+
+export interface CashFlowForecastData {
+    forecast: Array<{
+        month: string;
+        predictedIncome: number;
+        notes: string;
+    }>;
+    summary: string;
 }

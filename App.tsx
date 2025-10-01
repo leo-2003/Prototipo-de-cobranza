@@ -4,17 +4,20 @@ import Sidebar from './components/layout/Sidebar';
 import Header from './components/layout/Header';
 import Dashboard from './components/dashboard/Dashboard';
 import StudentList from './components/students/StudentList';
+import Reports from './components/reports/Reports';
+import Configuration from './components/configuration/Configuration';
 import ToastContainer from './components/common/Toast';
-import { UserRole, Student, ToastMessage } from './types';
-import { MOCK_STUDENTS } from './constants';
+import { UserRole, Student, ToastMessage, Account } from './types';
+import { MOCK_STUDENTS, MOCK_CHART_OF_ACCOUNTS } from './constants';
 
-type View = 'dashboard' | 'students';
+export type View = 'dashboard' | 'students' | 'reports' | 'configuration';
 
 const App: React.FC = () => {
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [currentUserRole] = useState<UserRole>(UserRole.Administrator);
   const [currentView, setCurrentView] = useState<View>('dashboard');
   const [students, setStudents] = useState<Student[]>(MOCK_STUDENTS);
+  const [chartOfAccounts, setChartOfAccounts] = useState<Account[]>(MOCK_CHART_OF_ACCOUNTS);
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
 
   useEffect(() => {
@@ -45,7 +48,11 @@ const App: React.FC = () => {
       case 'dashboard':
         return <Dashboard students={students} setCurrentView={setCurrentView} />;
       case 'students':
-        return <StudentList students={students} onUpdateStudent={handleUpdateStudent} addToast={addToast} />;
+        return <StudentList students={students} onUpdateStudent={handleUpdateStudent} addToast={addToast} chartOfAccounts={chartOfAccounts} />;
+      case 'reports':
+        return <Reports students={students} chartOfAccounts={chartOfAccounts} />;
+      case 'configuration':
+        return <Configuration chartOfAccounts={chartOfAccounts} />;
       default:
         return <Dashboard students={students} setCurrentView={setCurrentView} />;
     }

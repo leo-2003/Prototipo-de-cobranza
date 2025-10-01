@@ -1,6 +1,6 @@
-import React from 'react';
 
-type View = 'dashboard' | 'students';
+import React from 'react';
+import { View } from '../../App';
 
 interface SidebarProps {
   currentView: View;
@@ -8,7 +8,6 @@ interface SidebarProps {
 }
 
 const NavItem: React.FC<{
-  // Fix: Changed JSX.Element to React.ReactNode to resolve namespace error.
   icon: React.ReactNode;
   label: string;
   isActive: boolean;
@@ -51,6 +50,18 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, setCurrentView }) => {
                     isActive={currentView === 'students'}
                     onClick={() => setCurrentView('students')}
                 />
+                <NavItem
+                    label="Reportes"
+                    icon={<ChartBarIcon />}
+                    isActive={currentView === 'reports'}
+                    onClick={() => setCurrentView('reports')}
+                />
+                <NavItem
+                    label="Contabilidad"
+                    icon={<BookOpenIcon />}
+                    isActive={currentView === 'configuration'}
+                    onClick={() => setCurrentView('configuration')}
+                />
             </nav>
         </div>
         <div className="mt-auto">
@@ -69,6 +80,11 @@ const HomeIcon = () => (
 const UsersIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
 );
-
+const ChartBarIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20V16"/></svg>
+);
+const BookOpenIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+);
 
 export default Sidebar;

@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback, useMemo } from 'react';
 import { Student, PaymentStatus, Invoice, InvoiceStatus } from '../../types';
 import StudentStatusBadge from './StudentStatusBadge';
@@ -43,8 +44,6 @@ const StudentRow: React.FC<StudentRowProps> = ({ student, onRegisterPayment, add
         
         const studentForPrompt = {
             ...student,
-            dueAmount: overdueInvoice.balance,
-            dueDate: overdueInvoice.dueDate,
         };
 
         const message = await generateReminderMessage(studentForPrompt);
@@ -62,6 +61,10 @@ const StudentRow: React.FC<StudentRowProps> = ({ student, onRegisterPayment, add
         'Medio': 'text-accent-warning-500',
         'Alto': 'text-accent-danger-500'
     }[student.riskLevel];
+    
+    const handleGenerateStatement = () => {
+        addToast(`Generando estado de cuenta para ${student.name}... (funcionalidad pendiente)`, 'info');
+    }
 
     return (
         <>
@@ -91,21 +94,32 @@ const StudentRow: React.FC<StudentRowProps> = ({ student, onRegisterPayment, add
             <td className={`px-6 py-4 whitespace-nowrap text-sm font-semibold ${riskColor}`}>
                 {student.riskLevel}
             </td>
-            <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
-                <button 
-                    onClick={() => onRegisterPayment(student)}
-                    disabled={status === PaymentStatus.Paid}
-                    className="text-secondary-600 hover:text-secondary-900 dark:text-secondary-400 dark:hover:text-secondary-300 transition-colors disabled:text-neutral-400 disabled:cursor-not-allowed"
-                >
-                    Registrar Pago
-                </button>
-                 <button 
-                    onClick={handleGenerateMessage}
-                    disabled={isGeneratingMessage || status !== PaymentStatus.Overdue}
-                    className="text-primary-600 hover:text-primary-900 dark:text-primary-400 dark:hover:text-primary-300 transition-colors disabled:text-neutral-400 disabled:cursor-not-allowed"
-                >
-                    {isGeneratingMessage ? 'Generando...' : 'Mensaje IA'}
-                </button>
+            <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                <div className="flex items-center justify-end space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button 
+                        onClick={() => onRegisterPayment(student)}
+                        disabled={status === PaymentStatus.Paid}
+                        className="p-2 rounded-md hover:bg-secondary-100 dark:hover:bg-secondary-900/50 disabled:opacity-30 disabled:cursor-not-allowed"
+                        title="Registrar Pago"
+                    >
+                        <DollarSignIcon className="w-5 h-5 text-secondary-600 dark:text-secondary-400" />
+                    </button>
+                     <button 
+                        onClick={handleGenerateMessage}
+                        disabled={isGeneratingMessage || status !== PaymentStatus.Overdue}
+                        className="p-2 rounded-md hover:bg-primary-100 dark:hover:bg-primary-900/50 disabled:opacity-30 disabled:cursor-not-allowed"
+                         title="Generar Mensaje con IA"
+                    >
+                         {isGeneratingMessage ? <SpinnerIcon /> : <SparklesIcon className="w-5 h-5 text-primary-600 dark:text-primary-400" />}
+                    </button>
+                    <button 
+                        onClick={handleGenerateStatement}
+                        className="p-2 rounded-md hover:bg-neutral-200 dark:hover:bg-neutral-700"
+                        title="Generar Estado de Cuenta"
+                    >
+                        <DocumentTextIcon className="w-5 h-5 text-neutral-500" />
+                    </button>
+                </div>
             </td>
         </tr>
         {isExpanded && (
@@ -137,9 +151,10 @@ const StudentRow: React.FC<StudentRowProps> = ({ student, onRegisterPayment, add
         </>
     );
 };
-
+const DollarSignIcon = ({className="w-6 h-6"}) => <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}><path strokeLinecap="round" strokeLinejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>;
 const SparklesIcon = ({className = "w-5 h-5"}) => <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className={className}><path fillRule="evenodd" d="M9 4.5a.75.75 0 01.75.75v3.546a.75.75 0 01-1.5 0V5.25A.75.75 0 019 4.5zM12.75 8.663a.75.75 0 00-1.5 0V12a.75.75 0 001.5 0V8.663zM16.5 4.5a.75.75 0 01.75.75v3.546a.75.75 0 01-1.5 0V5.25a.75.75 0 01.75-.75zM15 9.75a.75.75 0 01.75.75v3.546a.75.75 0 01-1.5 0v-3.546a.75.75 0 01.75-.75zM8.25 10.5a.75.75 0 00-1.5 0V14.25a.75.75 0 001.5 0v-3.75zM12 12.75a.75.75 0 01.75.75v3.546a.75.75 0 01-1.5 0v-3.546A.75.75 0 0112 12.75zM11.25 3.53a.75.75 0 00-1.5 0v.53a.75.75 0 001.5 0v-.53zM15.75 3.53a.75.75 0 00-1.5 0v.53a.75.75 0 001.5 0v-.53zM12 19.5a.75.75 0 01.75.75v.53a.75.75 0 01-1.5 0v-.53A.75.75 0 0112 19.5z" clipRule="evenodd" /></svg>;
 const ChevronDownIcon = ({className = "w-6 h-6"}) => <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" /></svg>
-
+const DocumentTextIcon = ({className = "w-6 h-6"}) => <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" /></svg>;
+const SpinnerIcon = () => <svg className="animate-spin h-5 w-5 text-primary-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>;
 
 export default StudentRow;

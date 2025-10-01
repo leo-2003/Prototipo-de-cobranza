@@ -1,6 +1,6 @@
-import { GoogleGenAI, GenerateContentResponse } from "@google/genai";
-// FIX: Import InvoiceStatus to use for filtering invoices.
-import { Student, InvoiceStatus } from '../types';
+
+import { GoogleGenAI, GenerateContentResponse, Type } from "@google/genai";
+import { Student, InvoiceStatus, CashFlowForecastData } from '../types';
 
 const API_KEY = 'AIzaSyCh-hVWnTOcr5eoIUQKulW91g4WeWRM-VY';
 
@@ -14,7 +14,14 @@ const getPaymentHistoryNotes = (student: Student): string => {
     if (student.paymentHistory.length === 0) {
         return "Sin historial de pagos registrado.";
     }
-    const latePayments = student.paymentHistory.filter(p => p.concept.toLowerCase().includes('tardío')).length;
+    const latePayments = student.paymentHistory.filter(p => {
+        const paymentDate = new Date(p.date);
+        const relatedInvoice = student.invoices.find(inv => inv.id === p.invoiceId);
+        if (!relatedInvoice) return false;
+        const dueDate = new Date(relatedInvoice.dueDate);
+        return paymentDate > dueDate;
+    }).length;
+
     if (latePayments > 1) {
         return `Tiene un historial de ${latePayments} pagos tardíos.`;
     }
@@ -26,7 +33,6 @@ const getPaymentHistoryNotes = (student: Student): string => {
 
 
 export const generateReminderMessage = async (student: Student): Promise<string> => {
-    // FIX: The Student type does not have dueAmount or dueDate. They are derived from invoices.
     const unpaidInvoices = student.invoices.filter(
         (inv) => inv.status !== InvoiceStatus.Paid && inv.status !== InvoiceStatus.Cancelled
     );
@@ -55,8 +61,8 @@ export const generateReminderMessage = async (student: Student): Promise<string>
 
         Detalles del Alumno:
         - Nombre: ${student.name}
-        - Monto Vencido: $${dueAmount.toFixed(2)} MXN
-        - Fecha de Vencimiento: ${dueDate}
+        - Monto Vencido Total: $${dueAmount.toFixed(2)} MXN
+        - Fecha de Vencimiento más próxima: ${dueDate}
         - Notas sobre su historial de pagos: ${paymentNotes}
 
         Basado en estos detalles, genera un mensaje de WhatsApp conciso y personalizado en español. 
@@ -80,7 +86,6 @@ export const generateReminderMessage = async (student: Student): Promise<string>
 
 export const generateDashboardSummary = async (data: { totalCollected: number, totalDue: number, overdueCount: number, highRiskCount: number }): Promise<string> => {
     if (!API_KEY) {
-        // Fix: Access properties from the 'data' object.
         return Promise.resolve(`Resumen de Cobranza: ${data.overdueCount} alumnos con pagos vencidos. ${data.highRiskCount} alumnos en alto riesgo. Tasa de cobranza: ${((data.totalCollected / (data.totalDue || 1)) * 100).toFixed(1)}%. (Resumen de demostración: API Key no configurada)`);
     }
 
@@ -108,5 +113,78 @@ export const generateDashboardSummary = async (data: { totalCollected: number, t
     } catch (error) {
         console.error("Error generating dashboard summary:", error);
         return "No se pudo generar el resumen ejecutivo. Verifique la conexión con la API.";
+    }
+};
+
+
+export const generateCashFlowForecast = async (students: Student[]): Promise<CashFlowForecastData | null> => {
+    if (!API_KEY) {
+        console.warn("Cash flow forecast disabled: API Key not configured.");
+        return null;
+    }
+
+    const studentDataForPrompt = students.map(s => ({
+        id: s.id,
+        riskLevel: s.riskLevel,
+        paymentHistoryNotes: getPaymentHistoryNotes(s),
+        pendingInvoices: s.invoices
+            .filter(inv => inv.status === InvoiceStatus.Overdue || inv.status === InvoiceStatus.Sent)
+            .map(inv => ({
+                dueDate: inv.dueDate,
+                balance: inv.balance,
+            })),
+    }));
+
+    const prompt = `
+      Eres un analista financiero experto en predicción de flujo de efectivo para instituciones educativas.
+      Tu tarea es analizar los datos de los alumnos y sus facturas pendientes para crear un pronóstico de ingresos de efectivo para los próximos 3 meses.
+      
+      Considera los siguientes factores en tu análisis:
+      1.  **Fechas de Vencimiento:** Las facturas vencidas tienen más probabilidad de ser pagadas pronto.
+      2.  **Nivel de Riesgo:** Un alumno de 'Alto' riesgo tiene más probabilidad de pagar tarde o no pagar, comparado con uno de 'Bajo' riesgo.
+      3.  **Historial de Pagos:** Las notas sobre pagos tardíos son un indicador clave del comportamiento futuro.
+      
+      Datos de Alumnos:
+      ${JSON.stringify(studentDataForPrompt)}
+
+      Basado en estos datos, proporciona un pronóstico realista. No asumas que el 100% de lo adeudado será pagado. Aplica un factor de probabilidad de pago basado en el riesgo y el historial.
+      
+      Devuelve tu análisis únicamente en formato JSON.
+    `;
+
+    try {
+        const response = await ai.models.generateContent({
+            model: "gemini-2.5-flash",
+            contents: prompt,
+            config: {
+                responseMimeType: "application/json",
+                responseSchema: {
+                    type: Type.OBJECT,
+                    properties: {
+                        forecast: {
+                            type: Type.ARRAY,
+                            items: {
+                                type: Type.OBJECT,
+                                properties: {
+                                    month: { type: Type.STRING },
+                                    predictedIncome: { type: Type.NUMBER },
+                                    notes: { type: Type.STRING }
+                                },
+                                required: ["month", "predictedIncome", "notes"]
+                            }
+                        },
+                        summary: { type: Type.STRING }
+                    },
+                    required: ["forecast", "summary"]
+                },
+            },
+        });
+        
+        const jsonText = response.text.trim();
+        return JSON.parse(jsonText) as CashFlowForecastData;
+
+    } catch (error) {
+        console.error("Error generating cash flow forecast:", error);
+        return null;
     }
 };

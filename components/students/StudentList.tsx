@@ -1,5 +1,6 @@
+
 import React, { useState, useMemo } from 'react';
-import { Student, PaymentStatus, InvoiceStatus } from '../../types';
+import { Student, PaymentStatus, InvoiceStatus, Account } from '../../types';
 import StudentRow, { getStudentPaymentStatus } from './StudentRow';
 import RegisterPaymentModal from '../payments/RegisterPaymentModal';
 
@@ -7,6 +8,7 @@ interface StudentListProps {
     students: Student[];
     onUpdateStudent: (student: Student) => void;
     addToast: (message: string, type: 'success' | 'error' | 'info') => void;
+    chartOfAccounts: Account[];
 }
 
 const FilterButton: React.FC<{ label: string; isActive: boolean; onClick: () => void; }> = ({ label, isActive, onClick }) => (

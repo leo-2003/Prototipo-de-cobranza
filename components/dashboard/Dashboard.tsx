@@ -1,21 +1,22 @@
+
 import React from 'react';
-import { Student, PaymentStatus, InvoiceStatus } from '../../types';
+import { Student, InvoiceStatus } from '../../types';
 import StatCard from './StatCard';
 import CollectionChart from './CollectionChart';
-import RiskAnalysis from './RiskAnalysis';
+import RiskAnalysis from '../risk-analysis/RiskAnalysis';
 import RecentActivity from './RecentActivity';
 import QuickActions from './QuickActions';
+import { View } from '../../App';
 
 interface DashboardProps {
     students: Student[];
-    setCurrentView: (view: 'dashboard' | 'students') => void;
+    setCurrentView: (view: View) => void;
 }
 
 const Dashboard: React.FC<DashboardProps> = ({ students, setCurrentView }) => {
     const metrics = React.useMemo(() => {
         let totalCollected = 0;
         let totalPotential = 0;
-        let overdueCount = 0;
         const overdueStudentsSet = new Set<string>();
 
         students.forEach(student => {
@@ -32,12 +33,13 @@ const Dashboard: React.FC<DashboardProps> = ({ students, setCurrentView }) => {
             }
         });
         
-        overdueCount = overdueStudentsSet.size;
+        const overdueCount = overdueStudentsSet.size;
+        const totalDue = totalPotential - totalCollected;
 
-        return { totalCollected, totalPotential, overdueCount };
+        return { totalCollected, totalDue, overdueCount };
     }, [students]);
 
-    const collectionRate = metrics.totalPotential > 0 ? (metrics.totalCollected / metrics.totalPotential) * 100 : 0;
+    const collectionRate = metrics.totalCollected + metrics.totalDue > 0 ? (metrics.totalCollected / (metrics.totalCollected + metrics.totalDue)) * 100 : 0;
     const highRiskStudents = students.filter(s => s.riskLevel === 'Alto').length;
 
     return (
@@ -81,7 +83,7 @@ const Dashboard: React.FC<DashboardProps> = ({ students, setCurrentView }) => {
                     <QuickActions setCurrentView={setCurrentView} />
                     <RiskAnalysis 
                       totalCollected={metrics.totalCollected}
-                      totalDue={metrics.totalPotential}
+                      totalDue={metrics.totalDue}
                       overdueCount={metrics.overdueCount}
                       highRiskCount={highRiskStudents}
                     />
