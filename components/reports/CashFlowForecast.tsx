@@ -19,7 +19,11 @@ const CashFlowForecast: React.FC<CashFlowForecastProps> = ({ students }) => {
             const result = await generateCashFlowForecast(students);
             setForecast(result);
         } catch (err) {
-            setError('Hubo un error al generar el pronóstico. Por favor, inténtelo de nuevo.');
+            if (err instanceof Error) {
+                setError(err.message);
+            } else {
+                setError('Hubo un error inesperado al generar el pronóstico.');
+            }
             console.error(err);
         } finally {
             setIsLoading(false);
@@ -36,7 +40,12 @@ const CashFlowForecast: React.FC<CashFlowForecastProps> = ({ students }) => {
                         <p className="ml-3 text-neutral-500">Analizando datos históricos y pendientes...</p>
                     </div>
                 )}
-                {error && <p className="text-red-500 text-center">{error}</p>}
+                {error && (
+                    <div className="p-4 bg-red-50 dark:bg-red-900/20 rounded-lg text-sm text-red-800 dark:text-red-200 h-full flex flex-col justify-center">
+                        <p className="font-bold mb-1">Error de Pronóstico</p>
+                        <p>{error}</p>
+                    </div>
+                )}
                 {!isLoading && !error && forecast && (
                     <div>
                          <div className="p-4 mb-4 bg-primary-50 dark:bg-primary-900/20 rounded-lg text-sm text-primary-800 dark:text-primary-200">

@@ -12,17 +12,29 @@ interface RiskAnalysisProps {
 const RiskAnalysis: React.FC<RiskAnalysisProps> = ({ totalCollected, totalDue, overdueCount, highRiskCount }) => {
     const [summary, setSummary] = useState<string>('');
     const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
 
     const handleGenerateSummary = useCallback(async () => {
         setIsLoading(true);
-        const result = await generateDashboardSummary({
-            totalCollected,
-            totalDue,
-            overdueCount,
-            highRiskCount
-        });
-        setSummary(result);
-        setIsLoading(false);
+        setError(null);
+        setSummary('');
+        try {
+            const result = await generateDashboardSummary({
+                totalCollected,
+                totalDue,
+                overdueCount,
+                highRiskCount
+            });
+            setSummary(result);
+        } catch (e) {
+            if (e instanceof Error) {
+                setError(e.message);
+            } else {
+                setError("Ocurrió un error inesperado al generar el resumen.");
+            }
+        } finally {
+            setIsLoading(false);
+        }
     }, [totalCollected, totalDue, overdueCount, highRiskCount]);
     
     return (
@@ -33,6 +45,11 @@ const RiskAnalysis: React.FC<RiskAnalysisProps> = ({ totalCollected, totalDue, o
                     <div className="flex items-center justify-center h-full">
                         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-500"></div>
                         <p className="ml-3 text-neutral-500">Generando insights...</p>
+                    </div>
+                ) : error ? (
+                     <div className="p-4 bg-red-50 dark:bg-red-900/20 rounded-lg text-sm text-red-800 dark:text-red-200 h-full flex flex-col justify-center">
+                        <p className="font-bold mb-1">Error de Análisis</p>
+                        <p>{error}</p>
                     </div>
                 ) : summary ? (
                     <div className="p-4 bg-primary-50 dark:bg-primary-900/20 rounded-lg text-sm text-primary-800 dark:text-primary-200 leading-relaxed">

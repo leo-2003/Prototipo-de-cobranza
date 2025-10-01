@@ -46,13 +46,14 @@ const PaymentReminderAutomation: React.FC<PaymentReminderAutomationProps> = ({ s
                 });
             } catch (error) {
                 console.error(`Error generating message for ${student.name}:`, error);
+                const errorMessage = error instanceof Error ? error.message : "Error desconocido.";
                 generatedResults.push({
                     studentId: student.id,
                     studentName: student.name,
                     studentAvatar: student.avatar,
-                    message: 'Error al generar mensaje.',
+                    message: `Error: ${errorMessage}`,
                     status: 'error',
-                    error: (error as Error).message
+                    error: errorMessage
                 });
             }
         }
@@ -101,13 +102,13 @@ const PaymentReminderAutomation: React.FC<PaymentReminderAutomationProps> = ({ s
                     <h4 className="font-semibold text-neutral-700 dark:text-neutral-200 mb-3">Resultados Generados</h4>
                     <ul className="space-y-4 max-h-96 overflow-y-auto pr-2">
                         {results.map(result => (
-                            <li key={result.studentId} className="p-4 border border-neutral-200 dark:border-neutral-700 rounded-lg">
+                            <li key={result.studentId} className={`p-4 border rounded-lg ${result.status === 'error' ? 'border-red-300 dark:border-red-700' : 'border-neutral-200 dark:border-neutral-700'}`}>
                                 <div className="flex justify-between items-start">
                                     <div className="flex items-center">
                                         <img src={result.studentAvatar} alt={result.studentName} className="w-10 h-10 rounded-full mr-3" />
                                         <div>
                                             <p className="font-semibold">{result.studentName}</p>
-                                            {result.status === 'error' && <p className="text-xs text-red-500">Error: {result.error}</p>}
+                                            {result.status === 'error' && <p className="text-xs text-red-500 font-medium">Fallo al generar mensaje</p>}
                                         </div>
                                     </div>
                                     <button
@@ -119,7 +120,7 @@ const PaymentReminderAutomation: React.FC<PaymentReminderAutomationProps> = ({ s
                                         Copiar Mensaje
                                     </button>
                                 </div>
-                                <p className="mt-3 text-sm p-3 bg-neutral-100 dark:bg-neutral-800 rounded-md whitespace-pre-wrap font-mono">{result.message}</p>
+                                <p className={`mt-3 text-sm p-3 rounded-md whitespace-pre-wrap font-mono ${result.status === 'error' ? 'bg-red-50 dark:bg-red-900/30 text-red-800 dark:text-red-200' : 'bg-neutral-100 dark:bg-neutral-800'}`}>{result.message}</p>
                             </li>
                         ))}
                     </ul>

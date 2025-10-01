@@ -4,6 +4,21 @@ import { Student, InvoiceStatus, CashFlowForecastData } from '../types';
 
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
+/**
+ * Handles errors from the Gemini API, throwing a more specific, user-friendly error.
+ * @param error The original error caught.
+ * @param context A string describing the operation that failed (e.g., 'generating reminder message').
+ * @throws An error with a user-friendly message.
+ */
+const handleGeminiError = (error: unknown, context: string): never => {
+    console.error(`Error ${context}:`, error);
+    if (error instanceof Error && (error.message.toLowerCase().includes('api key') || error.message.toLowerCase().includes('invalid'))) {
+        throw new Error("La clave API de Gemini no está configurada o no es válida. Por favor, configure la variable de entorno API_KEY.");
+    }
+    throw new Error(`No se pudo completar la acción de "${context}". Inténtelo de nuevo.`);
+};
+
+
 const getPaymentHistoryNotes = (student: Student): string => {
     if (student.paymentHistory.length === 0) {
         return "Sin historial de pagos registrado.";
@@ -69,8 +84,7 @@ export const generateReminderMessage = async (student: Student): Promise<string>
         });
         return response.text;
     } catch (error) {
-        console.error("Error generating reminder message:", error);
-        return "Hubo un error al generar el mensaje. Por favor, inténtelo de nuevo.";
+        handleGeminiError(error, 'generar mensaje de recordatorio');
     }
 };
 
@@ -97,13 +111,12 @@ export const generateDashboardSummary = async (data: { totalCollected: number, t
         });
         return response.text;
     } catch (error) {
-        console.error("Error generating dashboard summary:", error);
-        return "No se pudo generar el resumen ejecutivo. Verifique la conexión con la API.";
+        handleGeminiError(error, 'generar resumen ejecutivo');
     }
 };
 
 
-export const generateCashFlowForecast = async (students: Student[]): Promise<CashFlowForecastData | null> => {
+export const generateCashFlowForecast = async (students: Student[]): Promise<CashFlowForecastData> => {
     const studentDataForPrompt = students.map(s => ({
         id: s.id,
         riskLevel: s.riskLevel,
@@ -165,7 +178,6 @@ export const generateCashFlowForecast = async (students: Student[]): Promise<Cas
         return JSON.parse(jsonText) as CashFlowForecastData;
 
     } catch (error) {
-        console.error("Error generating cash flow forecast:", error);
-        return null;
+        handleGeminiError(error, 'generar pronóstico de flujo de efectivo');
     }
 };
